@@ -184,4 +184,4 @@ export const Ejemplo = ()=> (
       { rank: 3, suit: 3 },
     ] } style={defHandStyle}/>
   </div>
-];
+);
