@@ -174,12 +174,14 @@ const defHandStyle = {
 };
 
 
-export const Ejemplo = ()=> [
-  <Hand cards={ [{ rank: 1 }, { rank: 2 }, { rank: 3 }] } hidden={true} style={defHandStyle}/>
-  <Hand cards={ [
-    { rank: 1, suit: 0 },
-    { rank: 10, suit: 1 },
-    { rank: 13, suit: 2 },
-    { rank: 3, suit: 3 },
-  ] } style={defHandStyle}/>
+export const Ejemplo = ()=> (
+  <div>
+    <Hand cards={ [{ rank: 1 }, { rank: 2 }, { rank: 3 }] } hidden={true} style={defHandStyle}/>
+    <Hand cards={ [
+      { rank: 1, suit: 0 },
+      { rank: 10, suit: 1 },
+      { rank: 13, suit: 2 },
+      { rank: 3, suit: 3 },
+    ] } style={defHandStyle}/>
+  </div>
 ];
