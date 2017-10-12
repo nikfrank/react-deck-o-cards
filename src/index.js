@@ -45,7 +45,7 @@ Array(50).fill(1).forEach((o, oi, arr)=> {
 
 
 
-<export const CardBack = ({ xOffset, yOffset }) => (
+export const CardBack = ({ xOffset, yOffset }) => (
   <g transform={`translate(${xOffset}, ${yOffset})`}>
     <rect width={170} height={158}
           x={0} y={0}
@@ -108,9 +108,7 @@ const suitFills = [
 ];
 
 
-export const Card = ({ rank, suit, fill, xOffset, yOffset, onClick }) => !rank? (
-  <Cardback xOffset={xOffset} yOffset={yOffset}/>
-) : (
+export const Card = ({ rank, suit, fill, xOffset, yOffset, onClick }) => (
   <g transform={`translate(${xOffset}, ${yOffset})`} onClick={onClick}>
     <rect width={170} height={158}
           x={0} y={0}
@@ -147,7 +145,7 @@ export const Hand = ({ cards=[], onClick, hidden, style={} }) => (
       cards.map( (card, i) => (
         !card.rank ? null : (
 
-          hidden ? (
+          hidden || card.hidden ? (
             <CardBack key={i} xOffset={i*100} yOffset={20} />
           ) : (
             <Card key={card.rank+''+card.suit}
