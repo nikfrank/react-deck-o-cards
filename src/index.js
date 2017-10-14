@@ -3,13 +3,12 @@ import React, { Component } from 'react';
 ////////////
 // card back
 
-
-const isntOffCorner = (cx, cy, r)=>
-  ((cx >= 20) && (cx <= 150)) | ((cy >= 20) && (cy <= 138)) ? true : (    
+const isntOffCorner = (h, w, cr)=> (cx, cy, r)=>
+  ((cx >= cr) && (cx <= w-cr)) || ((cy >= cr) && (cy <= h-cr-2)) ? true : (    
     Math.pow(
-      Math.pow( 65 - Math.abs( 85 - cx ), 2) +
-      Math.pow( 59 - Math.abs( 79 - cy ), 2), 0.5
-    ) + r < 20
+      Math.pow( ((w/2) -cr) - Math.abs( w/2 - cx ), 2) +
+      Math.pow( ((h/2) -cr-1) - Math.abs( h/2 -1 - cy ), 2), 0.5
+    ) + r < cr
   );
 
 const r256 = ()=> Math.floor(Math.random()*256);
@@ -19,51 +18,66 @@ const seedColors = [
   `rgb(${r256()}, ${r256()}, ${r256()})`,
 ];
 
-let circles = [];
+let deckBacks = {};
 
-Array(50).fill(1).forEach((o, oi, arr)=> {
-  const r = Math.abs( Math.random()*30 -12 );
-  const op = Math.random()*0.5 + 0.375;
+const generateCardBacks = (h, w, cr)=>{
+  if( deckBacks[`${h}/${w}/${cr}`] ) return;
+  const cornerCheck = isntOffCorner( h, w, cr );
   
-  let cx, cy;
-  let tries = 20;
+  let circles = [];
   
-  do {
-    cx = r +2 + Math.random()*(170 - 2*r - 4);
-    cy = r +2 + Math.random()*(158 - 2*r - 4);
+  Array(50).fill(1).forEach((o, oi, arr)=> {
+    const r = Math.abs( Math.random()*30 -12 );
+    const op = Math.random()*0.5 + 0.375;
     
-  } while (
-    (--tries) && (
-      !isntOffCorner(cx, cy, r+3) ||
-      circles.filter(p => (
-        Math.pow(p.cx-cx, 2) + Math.pow(p.cy-cy, 2)) < Math.pow(p.r + r + 4, 2)).length
-    )
+    let cx, cy;
+    let tries = 20;
+    
+    do {
+      cx = r +2 + Math.random()*(w - 2*r - 4);
+      cy = r +2 + Math.random()*(h-2 - 2*r - 4);
+      
+    } while (
+      (--tries) && (
+        !cornerCheck(cx, cy, r+3) ||
+        circles.filter(p => (
+          Math.pow(p.cx-cx, 2) + Math.pow(p.cy-cy, 2)) < Math.pow(p.r + r + 4, 2)).length
+      )
+    );
+
+    if(tries) circles.push({ cx, cy, r, op });
+  });
+
+  deckBacks[`${h}/${w}/${cr}`] = { circles };
+};
+
+generateCardBacks( 160, 170, 20 );
+
+
+export const CardBack = ({ xOffset, yOffset, cardWidth, cardHeight }) =>
+  !deckBacks[`${cardHeight}/${cardWidth}/${20}`] ? (
+    generateCardBacks( cardHeight, cardWidth, 20 ) ||
+    CardBack({ xOffset, yOffset, cardWidth, cardHeight })
+  ) : (
+    <g transform={`translate(${xOffset}, ${yOffset})`}>
+      <rect width={cardWidth} height={cardHeight-2}
+            x={0} y={0}
+            rx={20} ry={20}
+            fill={seedColors[2]}
+            stroke="black"/>
+      {
+        deckBacks[`${cardHeight}/${cardWidth}/${20}`]
+          .circles.map(({ cx, cy, r, op }, ki)=> (
+            <circle key={ki} r={r}
+                    cx={cx} cy={cy}
+                    fill={seedColors[0]}
+                    stroke={seedColors[1]}
+                    opacity={op}
+                    strokeWidth={2}/>
+          ) )
+      }
+    </g>
   );
-
-  if(tries) circles.push({ cx, cy, r, op });
-});
-
-
-
-export const CardBack = ({ xOffset, yOffset }) => (
-  <g transform={`translate(${xOffset}, ${yOffset})`}>
-    <rect width={170} height={158}
-          x={0} y={0}
-          rx={20} ry={20}
-          fill={seedColors[2]}
-          stroke="black"/>
-    {
-      circles.map(({ cx, cy, r, op }, ki)=> (
-        <circle key={ki} r={r}
-                cx={cx} cy={cy}
-                fill={seedColors[0]}
-                stroke={seedColors[1]}
-                opacity={op}
-                strokeWidth={2}/>
-      ) )
-    }
-  </g>
-);
 
 
 
@@ -108,9 +122,15 @@ const suitFills = [
 ];
 
 
-export const Card = ({ rank, suit, fill, xOffset, yOffset, onClick }) => (
+export const Card = ({
+  rank, suit,
+  fill,
+  cardWidth, cardHeight,
+  xOffset, yOffset,
+  onClick
+}) => (
   <g transform={`translate(${xOffset}, ${yOffset})`} onClick={onClick}>
-    <rect width={170} height={158}
+    <rect width={cardWidth} height={cardHeight-2}
           x={0} y={0}
           rx={20} ry={20}
           fill={suitFills[suit]}
@@ -139,21 +159,34 @@ export const Card = ({ rank, suit, fill, xOffset, yOffset, onClick }) => (
 ///////
 // Hand
 
-export const Hand = ({ cards=[], onClick, hidden, style={} }) => (
-  <svg viewBox={'0 0 '+(100*(cards.length||1) + 70)+' 160'} style={style}>
+export const Hand = ({
+  cards=[], onClick, hidden, style={},
+  cardWidth=170, cardHeight=160, cardOffset=100,
+  selectionHeight=20
+}) => (
+  <svg viewBox={'-2 -2 '+ (
+      cardOffset*(cards.length||1) + 4 + (cardWidth-cardOffset)
+    )+' '+(2+cardHeight+selectionHeight)}
+       style={style}>
     {
       cards.map( (card, i) => (
         !card.rank ? null : (
 
           hidden || card.hidden ? (
-            <CardBack key={i} xOffset={i*100} yOffset={20} />
+            <CardBack key={i}
+                      cardWidth={cardWidth}
+                      cardHeight={cardHeight}
+                      xOffset={i*cardOffset}
+                      yOffset={selectionHeight} />
           ) : (
-            <Card key={card.rank+''+card.suit}
+            <Card key={card.rank+''+card.suit+''+i}
+                  cardWidth={cardWidth}
+                  cardHeight={cardHeight}
                   onClick={()=> onClick(i)}
                   rank={card.rank}
                   suit={card.suit}
-                  xOffset={i * 100}
-                  yOffset={20 * !card.selected} />
+                  xOffset={i * cardOffset}
+                  yOffset={selectionHeight * !card.selected} />
           ) ) )
       )
     }

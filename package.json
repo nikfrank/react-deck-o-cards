@@ -1,6 +1,6 @@
 {
   "name": "react-deck-o-cards",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "some react components for rendering svg playing cards and their backs",
   "scripts": {
     "test": "jest",
